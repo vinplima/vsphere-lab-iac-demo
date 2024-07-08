@@ -1,0 +1,135 @@
+---
+managed_tags:
+
+  categories:
+
+    # Tags para a definição de tenants
+    - name: Tenant
+      description: Tags para classificação de propriedade de VMs
+      associable_object_types: 
+        - Virtual Machine
+      category_cardinality: single
+      state: present
+      tags:
+        - name: tenant01
+          description: VMs do Tenant 01
+          status: present
+        - name: tenant02
+          description: VMs do Tenant 02
+          status: present
+
+    - name: Priority
+      description: Tags para classificação de prioridade no acesso a recursos compartilhados
+      associable_object_types: 
+        - Virtual Machine
+      category_cardinality: single
+      state: present
+      tags:
+        - name: high
+          description: VM com prioridade de acesso elevada
+          status: present
+        - name: normal
+          description: VM com prioridade de acesso normal
+          status: present
+        - name: low
+          description: VM com prioridade de acesso baixa
+          status: present
+
+    - name: Relevance
+      description: Tags para classificação de relevância da máquina virtual
+      associable_object_types:
+        - Virtual Machine
+      category_cardinality: single
+      state: present
+      tags:
+        - name: essential
+          description: VM essencial para a organização
+          status: present
+        - name: desirable
+          description: VM desejável para a organização
+          status: present
+        - name: best-effort
+          description: VM que deverá ficar no ar se tiver recursos disponíveis
+          status: present
+
+    - name: Reservation
+      description: Tags para presets de nível de reserva
+      associable_object_types:
+        - Virtual Machine
+      category_cardinality: single
+      state: present
+      tags:
+        - name: half-resources
+          description: Meta dos recursos da VM serão reservados
+          status: present
+        - name: minimal-resources
+          description: VM desejável para a organização
+          status: present
+
+resource_pools:
+
+  # resource pool para Tenant 01
+  - name: rp-tenant01
+    state: present
+    cluster: cls-lab-drs
+    datacenter: dc-lab
+    cpu_shares: normal
+    cpu_limit: "{{ 20 * 1000 }}"        # 20 GHz
+    cpu_reservation: "{{ 10 * 1000 }}"  # 10 GHz
+    cpu_expandable_reservations: false
+    mem_shares: normal
+    mem_limit: "{{ 20 * 1024 }}"        # 20 GB
+    mem_reservation: "{{ 10 * 1024 }}"  # 10 GB
+    mem_expandable_reservations: false
+    has_priority_pools: true 
+    allocate_vm_by_tag: true
+    managed_tag:
+      category: Tenant
+      tag: tenant01
+
+  # resource pool para Tenant02
+  - name: rp-tenant02
+    state: present
+    cluster: cls-lab-drs
+    datacenter: dc-lab
+    cpu_shares: normal
+    cpu_limit: "{{ 20 * 1000 }}"       # 20 GHz
+    cpu_reservation: "{{ 10 * 1000 }}" # 10 GHz
+    cpu_expandable_reservations: true
+    mem_shares: normal
+    mem_limit: "{{ 20 * 1024 }}"       # 20 GB
+    mem_reservation: "{{ 10 * 1024 }}" # 10 GB
+    mem_expandable_reservations: true
+    has_priority_pools: true 
+    allocate_vm_by_tag: true
+    managed_tag:
+      category: Tenant
+      tag: tenant02
+
+#
+# Resource Pools de prioridade de acesso compartilhado. Criado dentro de cada Resource Pool gerenciado que tiver a opção has_priority_pools igual a true
+#
+priority_pools: 
+
+  - suffix: high
+    cpu_shares: high
+    mem_shares: high
+    managed_tag:
+      category: Priority
+      tag: high
+
+  - suffix: normal
+    cpu_shares: normal
+    mem_shares: normal
+    managed_tag:
+      category: Priority
+      tag: normal
+
+  - suffix: low
+    cpu_shares: low
+    mem_shares: low
+    managed_tag:
+      category: Priority
+      tag: low
+
+    

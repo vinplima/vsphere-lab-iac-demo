@@ -1,0 +1,25 @@
+- name: Allocate VMs in Resource Pools
+  hosts: vcenter
+  connection: local
+  gather_facts: true
+
+  tasks:
+
+    - name: Get VMs in vCenter
+      community.vmware.vmware_vm_info:
+        hostname: "{{ vcenter_hostname }}"
+        username: "{{ vcenter_username }}"
+        password: "{{ vcenter_password }}"
+        validate_certs: "{{ validate_certs }}"
+        show_tag: true
+        vm_type: vm
+      delegate_to: localhost
+      register: vm_info_result
+
+    - name: Allocate managed virtual machines in managed Resource Pools
+      ansible.builtin.include_tasks:
+        file: tasks/filter-vms-in-resource-pool-tags.yml
+      when: resource_pool.allocate_vm_by_tag
+      loop: "{{ resource_pools }}"
+      loop_control:
+        loop_var: resource_pool

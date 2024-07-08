@@ -1,0 +1,14 @@
+---
+
+- name: Filters virtual machines with the Resource Pool tag
+  ansible.builtin.set_fact:
+    resource_pool_virtual_machines: "{{ vm_info_result.virtual_machines | json_query(query) }}"
+  vars:
+    query: "[? tags[? category_name == '{{ resource_pool.managed_tag.category }}' && name=='{{ resource_pool.managed_tag.tag }}' ]]"
+
+- name: Migrate VM to Resource Pool or its children - {{ resource_pool.name }}
+  ansible.builtin.include_tasks:
+    file: migrate-vm-to-resource-pool.yml
+  loop: "{{ resource_pool_virtual_machines }}"
+  loop_control:
+    loop_var: virtual_machine

@@ -1,0 +1,39 @@
+---
+
+- name: Sets destination Resource Pool
+  ansible.builtin.set_fact:
+    destination_resource_pool: "{{ resource_pool.name }}"
+
+- name: Configures priority Resource Pool if it is the case
+  when: resource_pool.has_priority_pools
+  block:
+
+    - name: Set default priority tag
+      ansible.builtin.set_fact:
+        priority_tag: normal
+
+    - name: Get VM priority tag
+      ansible.builtin.set_fact:
+        priority_tag: "{{ item.name }}"
+      with_items: "{{ virtual_machine.tags }}"
+      when: item.category_name == 'Priority'
+
+    - name: Get priority Resource Pool name
+      ansible.builtin.set_fact:
+        destination_resource_pool: "{{ destination_resource_pool + '-' + (priority_pools | json_query(query) | list | first) }}"
+      vars:
+        query: "[? managed_tag.tag == '{{ priority_tag }}'].suffix"
+
+- name: Perform vMotion of virtual machine - {{ virtual_machine.guest_name }}
+  community.vmware.vmware_guest:
+    hostname: "{{ vcenter_hostname }}"
+    username: "{{ vcenter_username }}"
+    password: "{{ vcenter_password }}"
+    validate_certs: "{{ validate_certs }}"
+    name: "{{ virtual_machine.guest_name }}"
+    datacenter: "{{ resource_pool.datacenter }}"
+    cluster: "{{ resource_pool.cluster }}"
+    resource_pool: "{{ destination_resource_pool }}"
+    state: present
+  delegate_to: localhost
+  ignore_errors: true

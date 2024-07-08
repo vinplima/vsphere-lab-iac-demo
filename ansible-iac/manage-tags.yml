@@ -1,0 +1,14 @@
+---
+- name: Manage Tags
+  hosts: vcenter
+  connection: local
+  gather_facts: true
+
+  tasks:
+
+    - name: Manage categories in vCenter
+      ansible.builtin.include_tasks:
+        file: tasks/create-category-in-vcenter.yml
+      loop: "{{ managed_tags.categories }}"
+      loop_control:
+        loop_var: category

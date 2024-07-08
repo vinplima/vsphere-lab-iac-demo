@@ -1,0 +1,47 @@
+---
+
+- name: Create Resource Pools in vCenter
+  hosts: vcenter
+  connection: local
+  gather_facts: true
+
+  tasks:
+
+    - name: Manage Resource Pools
+      community.vmware.vmware_resource_pool:
+        hostname: "{{ vcenter_hostname }}"
+        username: "{{ vcenter_username }}"
+        password: "{{ vcenter_password }}"
+        validate_certs: "{{ validate_certs }}"
+        datacenter: "{{ resource_pool.datacenter }}"
+        cluster: "{{ resource_pool.cluster }}"
+        resource_pool: "{{ resource_pool.name }}"
+        state: present
+        cpu_shares: "{{ resource_pool.cpu_shares }}"
+        cpu_limit: "{{ resource_pool.cpu_limit }}"
+        cpu_reservation: "{{ resource_pool.cpu_reservation }}"
+        cpu_expandable_reservations: "{{ resource_pool.cpu_expandable_reservations }}"
+        mem_shares: "{{ resource_pool.mem_shares }}"
+        mem_limit: "{{ resource_pool.mem_limit }}"
+        mem_reservation: "{{ resource_pool.mem_reservation }}"
+        mem_expandable_reservations: "{{ resource_pool.mem_expandable_reservations }}"
+      when: resource_pool.state == 'present'
+      loop: "{{ resource_pools }}"
+      loop_control:
+        loop_var: resource_pool
+      delegate_to: localhost
+
+    - name: Manage Priority Resource Pools
+      community.vmware.vmware_resource_pool:
+        hostname: "{{ vcenter_hostname }}"
+        username: "{{ vcenter_username }}"
+        password: "{{ vcenter_password }}"
+        validate_certs: "{{ validate_certs }}"
+        datacenter: "{{ item.0.datacenter }}"
+        parent_resource_pool: "{{ item.0.name }}"
+        resource_pool: "{{item.0.name}}-{{ item.1.suffix }}"
+        state: present
+        cpu_shares: "{{ item.1.cpu_shares }}"
+        mem_shares: "{{ item.1.mem_shares }}"
+      when: item.0.state == 'present' and item.0.has_priority_pools
+      loop: "{{ resource_pools | product(priority_pools) | list }}"

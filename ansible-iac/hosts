@@ -1,0 +1,8 @@
+[vcenter]
+localhost
+
+[vcenter:vars]
+vcenter_hostname = vcenter.vsphere.lab
+vcenter_username = administrator@vsphere.local
+vcenter_password = VMware1!
+validate_certs = false

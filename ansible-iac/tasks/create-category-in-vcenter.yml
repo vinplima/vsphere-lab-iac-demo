@@ -1,0 +1,22 @@
+---
+- name: Ensure category {{ category.name }} is {{ category.state }} in vCenter
+  community.vmware.vmware_category:
+    hostname: "{{ vcenter_hostname }}"
+    username: "{{ vcenter_username }}"
+    password: "{{ vcenter_password }}"
+    validate_certs: "{{ validate_certs }}"
+    category_name: "{{ category.name }}"
+    category_description: "{{ category.description }}"
+    category_cardinality: "{{ category.category_cardinality }}"
+    associable_object_types: "{{ category.associable_object_types }}"
+    state: "{{ category.state }}"
+  register: category_rst
+  delegate_to: localhost
+
+- name: Manage category {{ category.name }} tags in vCenter
+  ansible.builtin.include_tasks:
+    file: create-tag-in-vcenter.yml
+  loop: "{{ category.tags }}"
+  loop_control:
+    loop_var: tag
+  when: category.state == 'present'
